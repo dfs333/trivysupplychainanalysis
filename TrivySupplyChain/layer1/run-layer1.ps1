@@ -5,7 +5,8 @@
   2. If ./corpus is empty, fetches a real sample corpus from public repos.
   3. Runs the analyzer over the corpus and writes results/corpus_report.{json,md}.
 
-  Usage:  powershell -ExecutionPolicy Bypass -File .\run-layer1.ps1 [-Fetch]
+  Usage:  powershell -File .\run-layer1.ps1 [-Fetch]
+  (No -ExecutionPolicy flag needed; CurrentUser policy is RemoteSigned.)
 #>
 param([switch]$Fetch)
 

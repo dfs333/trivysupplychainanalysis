@@ -10,7 +10,8 @@
        build-cadence parameter p over a 10x range) and the mitigation-ranking
        stability check.
 
-  Usage:  powershell -ExecutionPolicy Bypass -File .\run-layer3.ps1
+  Usage:  powershell -File .\run-layer3.ps1
+  (No -ExecutionPolicy flag needed; CurrentUser policy is RemoteSigned.)
 #>
 
 $ErrorActionPreference = "Continue"   # native tools write to stderr; don't make that terminating

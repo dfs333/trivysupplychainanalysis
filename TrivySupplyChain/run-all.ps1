@@ -5,7 +5,10 @@
   prints the combined mitigation table from the paper.  Each row is a TLC run
   with a different Init; "the table is the validation."
 
-  Usage:   powershell -ExecutionPolicy Bypass -File .\run-all.ps1
+  Usage:   powershell -File .\run-all.ps1
+  (CurrentUser execution policy is RemoteSigned on this host, so no
+   -ExecutionPolicy flag is needed.  Run .\env-check.ps1 first to verify the
+   toolchain if anything looks off.)
 #>
 
 # NOTE: deliberately NOT "Stop" - native tools (java/TLC) write to stderr, and
@@ -32,7 +35,11 @@ New-Item -ItemType Directory -Force -Path $results | Out-Null
 
 function Invoke-TLC($module, $cfg) {
     $log = Join-Path $results ("{0}.out" -f ($cfg -replace '\.cfg$',''))
-    & $java -XX:+UseParallelGC -cp $jar tlc2.TLC -deadlock -config $cfg $module *> $log
+    # Unique metadir per run (in TEMP) so rapid/parallel TLC runs can never
+    # collide on the timestamped states dir, and no scratch is left in the tree.
+    $md = Join-Path $env:TEMP ("tlc_" + [guid]::NewGuid().ToString("N"))
+    & $java -XX:+UseParallelGC -cp $jar tlc2.TLC -deadlock -metadir $md -config $cfg $module *> $log
+    Remove-Item $md -Recurse -Force -ErrorAction SilentlyContinue
     return (Get-Content $log -Raw)
 }
 
@@ -112,9 +119,8 @@ foreach ($row in $rows) {
 }
 $md | Set-Content -Encoding utf8 (Join-Path $results "validation_table.md")
 
-# tidy TLC scratch (state-graph metadata dirs) so the project stays clean
-Get-ChildItem $PSScriptRoot -Directory -Filter "states" -ErrorAction SilentlyContinue |
-    Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+# (TLC scratch now goes to a unique per-run TEMP metadir and is cleaned there,
+#  so the project tree stays clean with no states\ collisions.)
 
 if ($allOk) {
     Write-Host "ALL CHECKS PASSED - model reproduces the documented incident and mitigation outcomes." -ForegroundColor Green
