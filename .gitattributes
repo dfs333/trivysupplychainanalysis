@@ -1,0 +1,6 @@
+# GitHub Linguist: the bundled PRISM distribution and the TLA+ tools jar are
+# third-party vendored binaries, not this project's source. Exclude them from
+# the repository language statistics so the real languages (TLA+, PRISM, Python,
+# PowerShell, JavaScript, LaTeX) are reported.
+TrivySupplyChain/layer3/prism/**   linguist-vendored
+TrivySupplyChain/tools/**          linguist-vendored
