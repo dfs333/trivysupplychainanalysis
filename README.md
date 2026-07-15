@@ -79,7 +79,9 @@ TrivySupplyChain/            The model + verification harness
   run-all.ps1                Reproduce all 10 TLC checks
   env-check.ps1              One-shot environment doctor
 Trivy-USENIX-paper/          USENIX-style LaTeX source (main.tex, compiles standalone)
-DOCS/                        Generated Word versions of the paper / results
+Docs/                        Generated Word documents:
+  Layout/                    draft + Layer-2 workflow docs
+  ValidationResults+Paper/   validation report + academic paper
 Trivy-TeamPCP-Dossier.md     Incident dossier — the sourced evidence base (read-only)
 ```
 
@@ -125,7 +127,7 @@ self-contained (standard CTAN packages) and compiles on Overleaf or with any TeX
 pdflatex main.tex && pdflatex main.tex     # or: tectonic main.tex
 ```
 
-Word renditions of the paper and the filled-in validation report are in `DOCS/`.
+Word renditions of the paper and the filled-in validation report are in `Docs/ValidationResults+Paper/`.
 
 ---
 
