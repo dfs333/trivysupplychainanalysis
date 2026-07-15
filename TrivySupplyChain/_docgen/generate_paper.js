@@ -88,7 +88,7 @@ children.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after:
   children: [new TextRun({ text: "A Formal-Methods Reconstruction of the Trivy / TeamPCP Compromise (CVE-2026-33634)",
     italics: true, font: SERIF, size: 24, color: MUTE })] }));
 children.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 160, after: 20 },
-  children: [new TextRun({ text: "[Author Name]", font: SERIF, size: 22, color: INK })] }));
+  children: [new TextRun({ text: "Franklin Hanna", font: SERIF, size: 22, color: INK })] }));
 children.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 20 },
   children: [new TextRun({ text: "[Affiliation]  ·  [email]", font: SERIF, size: 20, color: MUTE })] }));
 children.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 200 },

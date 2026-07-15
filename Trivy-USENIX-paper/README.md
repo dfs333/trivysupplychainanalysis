@@ -41,6 +41,6 @@ references, all 10 sections, Tables 1–5, Listing 1 (TLA+ actions), Figure 1
 
 ## To finish before submitting
 
-- Fill the two placeholders: `[Author Name]` and `[Affiliation] [email]`.
+- Author is set to **Franklin Hanna**; fill the remaining `[Affiliation]` and `[email]` placeholders.
 - USENIX submissions are typically **anonymous** — leave the author block empty
   or use `\usepackage{usenix-2020-09}`'s anonymous mode for the review version.

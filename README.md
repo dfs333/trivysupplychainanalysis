@@ -135,7 +135,8 @@ Word renditions of the paper and the filled-in validation report are in `DOCS/`.
 
 ## Status & scope
 
-Research preprint in progress; author/affiliation are placeholders in `main.tex`. Incident
+Research preprint in progress by **Franklin Hanna** (affiliation/email are still
+placeholders in `main.tex`). Incident
 facts are drawn from the public dossier (Aqua, GHSA, CVE-2026-33634, Unit 42, Microsoft,
 Wiz, ReversingLabs, Endor Labs, OpenSSF/OSV, and others). Modeling assumptions and their
 limits are stated explicitly in the paper's *Limitations and Threats to Validity* section.
