@@ -83,6 +83,12 @@ DOCS/                        Generated Word versions of the paper / results
 Trivy-TeamPCP-Dossier.md     Incident dossier — the sourced evidence base (read-only)
 ```
 
+> **Where's `layer2/`?** Layer 2 (incident reconstruction) *is* the top level of
+> `TrivySupplyChain/` — the `TrivySupplyChain.tla` model, the `cfg_*.cfg` configs, the
+> `MC*.tla` / `SecureWorkflow.tla` modules, and `run-all.ps1`. It was built first as the
+> core, so it lives at the root; `layer1/` and `layer3/` are the validation layers added
+> around it.
+
 ---
 
 ## Reproduce it
