@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 states/
 .claude/
+.vs/
 Trivy-USENIX-paper/_tec/
 
 # local-only working files (kept on disk, not published)
