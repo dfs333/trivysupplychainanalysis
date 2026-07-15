@@ -1,0 +1,153 @@
+Table:
+1. 
+Attack stages observed → stages your model represents → probability/reachability our model assigns → whether documented mitigations eliminate the path in our model
+Step 1: Gather every public artifact into a single document to assess
+Aqua Security's official incident disclosure and any follow-up updates
+GitHub Security Advisory for the repos
+CVE-2026-33634 
+CISA KEV catalog
+Mercor’s public disclosure statement (the first confirmed downstream victim)
+Cross-referencing:
+Palo Alto Unit 42 (CanisterWorm)
+Microsoft Security Blog's writeup on Trivy (primarily tag-mutation mechanism)
+Wiz Research’s tracking (attacker behavior post exfiltration)
+ReversingLab’s analysis (payload structure)
+EndorLabs Article (February-March causal chain)
+SANS ISC 
+Cato Networks
+Technical artifacts: 
+Published IOCs (C2 domains, IP addresses)
+The 
+tpcp.tar.gz
+ payload structure (Endor Labs)
+We want to know from these:
+A. What the attacker accessed initially
+B. What credential or capability that gave them
+C. What they did next
+D. What they exfiltrated
+E. What they did 
+NOT 
+do because the capability wasn’t there or they didn’t attempt it; this constrains the model’s reachability predictions to reflect variables accurately. (If the attacker had CI write access but didn’t 
+tamper with releases)
+Step 2: Identify the system boundary
+In-scope for formal claims:
+Aqua Security’s account credentials and rotation state
+GitHub repos (trivy-action; setup-trivy) and their tag-to-commit mappings
+Victim Github Action runners (VMs or containers) (abstract – dedicated persistent connection per victim organization)
+Secrets present in runner environment variables at execution time
+The attacker’s knowledge set (secrets exfiltrated)
+Victim workflow configuration: tag reference vs. SHA pin.
+Credential rotation actions and their completeness
+Environment assumptions:
+How the attacker initially got access to credentials
+Attacker C2 infrastructure - Exfiltration is modeled as set union into attackerKnowledge; the network path is abstract
+Victim production systems - The stolen credentials’ downstream is a consequence of exfiltration, not reachability
+Git object storage internals - Tag mutation is an atomic action in the model
+GitHub’s internal authentication/authorization
+Payload internals; Modeling malicious execution transfers secrets; focusing on the active behavior of code, not how the payload is structured.
+Step 3: Encode the pre-attack state, specifying in formalism
+Map each dossier claim to a specific TLA+ constant or initial-state constraint.
+Constants to instantiate:
+ 
+5 victims, 5 tags, 3 commits is more than enough to exercise reachability claim.
+Initial-state constraints that encode the dossier:
+ 
+- Each line traces to a specific dossier claim. In the paper, reproduce this init predicate annotated with source citations – evidence table made precise.
+Calibrated-from-corpus parameter: 
+pinningPolicy
+ = [v \
+in
+ Victims |-&gt; 
+&quot;tag&quot;
+] 
+ 
+- Assumption drawn from Layer 1 analysis; measured fraction using SHA pins vs. tag references
+- For TLA+ reachability, a uniform-tag assumption is the worst-case and appropriate for the safety property.
+Principals and capabilities (who can invoke what, who holds what secret, who can write to that artifact): Aqua Security maintainers, Aqua’s CI service account, GitHub Actions runner instances at thousands of victim organizations, trivy-action and setup-trivy repositories, and the Trivy release distribution
+Trust edges (Established relationships between systems, domains, or users that the hacker plans to abuse): Victim workflow → tag reference @v0.x → whatever commit that tag currently points to; Aqua service account → push/tag-mutation permission on the action repo.
+ 
+Capabilities held by attacker pre-stage-2: A compromised Aqua service account with tag-write permission. 
+Secrets in scope on each runner: Cloud credentials, SSH keys, K8s configs, CI secrets (enumerated by Wiz and Endor) 
+Property to check: There exists a reachable state in which a victim runner’s secrets are known to the attacker, reachable from an initial state where the attacker holds 
+solely
+ the Aqua service acc. credential
+Attack trace to validate against: 
+Attacker uses pre-existing service account credential (residual from Feb incident).
+Attacker force-pushes tags to point to malicious commits (76/77 on trivy-action, 7/7 on setup-trivy).
+Victim pipelines resolve tag → fetch malicious commit → execute in runner context.
+Malicious code reads the runner environment, exfiltrates to the attacker C2.
+Stolen npm tokens from the runner env enable stage 2 (CanisterWorm on npm)
+Step 4: Encode the attack as a trace and as an adversary 
+- They check different things. 
+Trace-based sanity check:
+ Verifies that a specific known execution path is working as intended
+- If written as a specific trace scenario and TLC accepts it as reachable from 
+[Init]
+, it is confirmed the formalism can represent the documented attack. If rejected, model is wrong.
+Adversary-based reachability check: Identifying if any possible path exists for an attacker to trigger a vulnerability
+- Run TLC with 
+NoExfiltration
+ 
+as an invariant on the vulnerable configuration (
+pinningPolicy
+ all tags, service account unrotated). It will produce a counterexample trace – shortest path from Init to a state violating 
+NoExfiltration
+.
+Compare the counterexample to the documented attack structurally: Documented from dossier/TLC counterexample:
+1. Attacker holds Aqua service account / 
+[Init] (attacker starts with credential)
+2. Force-push tags to malicious commits / 
+ForcePushTag
+(trivy-action, v0.
+29
+, c_malicious_1)
+3. Victim pipeline executes on next run / 
+RunnerExecute
+(Mercor, trivy-action, v0.
+29
+)
+4. Exfiltration to attacker C2 / 
+attackerKnowledge' = victimSecrets
+[Mercor]
+ (within RunnerExecute)
+If TLC finds a shorter path than documented; It means there were multiple viable attack strategies and the attacker picked a longer one, or the abstraction collapsed some real steps.
+Step 5: Encode the mitigation and re-check
+3 Distinct Mitigations: SHA Pinning, Complete Credential Rotation, Partial Rotation
+1. Change initial state so 
+pinningPolicy
+ = [v\
+in
+ Victims |-&gt; 
+&quot;sha&quot;
+]
+ for all victims, re-run TLC with 
+NoExfiltration
+. Expected result: Invariant holds. “Under universal SHA pinning, the attack is unreachable in our model”
+2. Change initial state so 
+rotationState[AquaServiceAcct] = 
+&quot;rotated&quot;
+ and 
+maintainerCreds = {}
+, re-run. Expected result: 
+ForcePushTag
+ 
+is unreachable from any state, so the invariants holds even with tag based pinning. “Complete rotation of compromised credentials in the February response would have prevented the March attack class in our model.”
+3. Keep 
+rotationState[AquaServiceAcct] = 
+&quot;valid&quot;
+ and 
+maintainerCreds = {AquaServiceAcct}
+ — i.e., model what actually happened. Verify ResidualAccessVulnerability holds and there exists a reachable compromise state. “Our model predicts that the Februaru remediation, because the service account credential was left valid, necessarily permits the March attack class – matching the documented incident causation.”
+This last result is the one that justifies the paper; a formalism that distinguishes complete from partial and flags partial as insufficient is saying something non-trivial is went wrong in real life.
+Combined mitigation table for the paper: Configuration/
+NoExfiltration
+/
+ResidualAccessVulnerability
+/Matches Reality
+Tag refs + valid stolen cred (pre-March actual) / fails / triggered / Yes, attack occured
+Tag refs + complete rotation / holds / not triggered / No attack
+SHA pins + valid stolen cred / holds / not triggered / protects even with residual cred
+SHA pins + complete rotation / holds / not triggered / full defense
+Each row is a TLC run with a different 
+Init
+, the table is the validation

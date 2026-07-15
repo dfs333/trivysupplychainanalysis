@@ -1,0 +1,62 @@
+// =====================================================================
+// Layer 3 (predictive calibration) - probabilistic / quantitative
+// counterpart of the TLA+ Layer 2 reachability model.
+//
+// An MDP of the March-2026 Trivy / "TeamPCP" GitHub Action supply-chain
+// attack.  The attacker's weaponization TIMING is nondeterministic (an
+// adversary, resolved by PRISM's max/min schedulers); the victim's build
+// cadence is probabilistic.  This lifts the Layer 2 actions
+// (ForcePushTag, RunnerExecute) into a quantitative setting so we can
+// compute exact compromise probabilities and expected time-to-compromise
+// under each mitigation -- the quantities the paper calibrates against
+// OSV / Backstabber's-Knife-Collection frequencies and incident reports.
+//
+// Mitigation knobs (set per run; mirror the Layer 2 cfg_* configurations):
+//   rotated = 1  -> the residual Aqua service-account credential was fully
+//                   rotated, so the attacker can never force-push a tag.
+//   shaPin  = 1  -> the victim pins the action by full commit SHA and is
+//                   therefore immune to tag mutation.
+// Parameter:
+//   p  -> probability the victim's workflow runs on a given day (build
+//         cadence).  Varied across a 10x range for sensitivity analysis.
+// =====================================================================
+
+mdp
+
+const int rotated;   // 0 or 1
+const int shaPin;    // 0 or 1
+const double p;      // build cadence per day, in (0,1]
+
+module supply_chain
+
+    weaponized  : bool init false;  // a repo tag now resolves to the malicious commit
+    compromised : bool init false;  // victim runner executed malicious code & exfiltrated
+
+    // Adversary action: force-push the tag to the malicious commit.  Enabled
+    // only while the residual credential is valid (rotated = 0).  Its timing is
+    // a nondeterministic choice -> this is what makes the model an MDP.
+    [day] !weaponized & !compromised & (rotated = 0) -> (weaponized' = true);
+
+    // Adversary waits today (no weaponization).  The competing choice.
+    [day] !weaponized & !compromised -> true;
+
+    // Once weaponized, the victim's routine workflow runs with probability p.
+    // A tag-pinning victim that runs executes the malicious commit and is
+    // compromised; a SHA-pinning victim is immune.
+    [day]  weaponized & !compromised & (shaPin = 0) -> p:(compromised' = true) + (1 - p):true;
+    [day]  weaponized & !compromised & (shaPin = 1) -> true;
+
+    // Absorbing once compromised.
+    [day]  compromised -> true;
+
+endmodule
+
+// One unit of reward per elapsed day until compromise occurs:
+// R{"days_to_compromise"}min=? [ F compromised ] is the fastest-adversary
+// expected time-to-compromise.
+rewards "days_to_compromise"
+    [day] !compromised : 1;
+endrewards
+
+// Convenience label.
+label "compromise" = compromised;

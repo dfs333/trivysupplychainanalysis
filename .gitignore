@@ -1,0 +1,6 @@
+node_modules/
+__pycache__/
+*.pyc
+states/
+.claude/
+Trivy-USENIX-paper/_tec/

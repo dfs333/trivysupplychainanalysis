@@ -1,0 +1,19 @@
+// Multi-stage propagation properties.  T (days) supplied via -const T=...
+const int T;
+
+// (1) Probability the cascade reaches the second stage (npm propagation).
+P=? [ F "stage2" ];
+
+// (2) Probability stage 2 is reached within T days.
+P=? [ F<=T "stage2" ];
+
+// (3) Probability of FULL downstream propagation (whole consumer population).
+P=? [ F "saturated" ];
+
+// (4) Expected compromised host footprint (stage-1 victim + downstream) at day T.
+R{"footprint"}=? [ I=T ];
+
+// (5) Expected days to the first downstream compromise.
+//     Well-defined (finite) when stage 2 is reached with probability 1
+//     (run with q=1 to read the conditional expected time).
+R{"days_to_stage2"}=? [ F "stage2" ];

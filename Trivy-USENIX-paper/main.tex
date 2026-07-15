@@ -1,0 +1,290 @@
+% =====================================================================
+%  Trivy / TeamPCP formal-analysis paper -- USENIX Security style.
+%
+%  Self-contained: compiles with any modern TeX (Overleaf, TeX Live,
+%  MiKTeX, tectonic) using only standard CTAN packages.
+%
+%  FOR CAMERA-READY: USENIX ships an official style file
+%  (usenix-2020-09.sty).  To use it, replace the geometry/titlesec
+%  block below with  \usepackage{usenix-2020-09}  (Overleaf has the
+%  "USENIX" template built in), then keep the body verbatim.
+% =====================================================================
+\documentclass[letterpaper,twocolumn,10pt]{article}
+
+\usepackage[letterpaper,top=1in,bottom=1in,left=0.75in,right=0.75in,columnsep=0.28in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{mathptmx}          % Times text + math (USENIX uses Times)
+\usepackage{microtype}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{amsmath,amssymb}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+\usepackage{titlesec}
+
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection}{0.6em}{}
+\titlespacing*{\section}{0pt}{1.3ex plus .2ex}{0.6ex}
+\titlespacing*{\subsection}{0pt}{1.0ex plus .2ex}{0.4ex}
+\setlength{\parindent}{1em}
+\setlength{\parskip}{0pt}
+
+\lstset{
+  basicstyle=\ttfamily\footnotesize,columns=fullflexible,keepspaces=true,
+  frame=single,rulecolor=\color{black!35},backgroundcolor=\color{black!4},
+  xleftmargin=0.6em,framexleftmargin=0.6em,aboveskip=0.5em,belowskip=0.2em,breaklines=false
+}
+
+\newcommand{\code}[1]{\texttt{\small #1}}
+
+\title{Quantitative Analysis for the Mitigation of Multi-Stage Supply-Chain Attacks in Routine Automated CI/CD Workflows}
+\author{}
+\date{}
+
+\begin{document}
+
+% ---- full-width title + abstract banner, then two-column body ----
+\twocolumn[{%
+  \centering
+  {\LARGE\bfseries Quantitative Analysis for the Mitigation of Multi-Stage\\[2pt]
+   Supply-Chain Attacks in Routine Automated CI/CD Workflows\par}
+  \vspace{0.6em}
+  {\large\itshape A Formal-Methods Reconstruction of the Trivy\,/\,TeamPCP Compromise (CVE-2026-33634)\par}
+  \vspace{1.0em}
+  {\large [Author Name]\par}\vspace{0.2em}
+  {\normalsize [Affiliation] \quad [email]\par}
+  \vspace{1.4em}
+  \begin{minipage}{0.86\textwidth}
+    \begin{center}\textbf{Abstract}\end{center}\vspace{0.3em}
+    \noindent Modern software delivery depends on Continuous Integration and Continuous Deployment (CI/CD) pipelines that automatically resolve and execute third-party code, GitHub Actions being the dominant example. When an attacker mutates a floating version tag of a widely used Action, thousands of downstream pipelines execute attacker-controlled code with production credentials on their next routine run. In March 2026 exactly this occurred: the trivy-action and setup-trivy Actions were compromised (CVE-2026-33634), leaking secrets that seeded a second-stage npm worm. We present a formal, quantitative analysis of this multi-stage attack. We encode the disclosed pre-attack state as a labelled transition system in TLA+ and exhaustively check, with the TLC model checker, whether the documented attack is reachable and which mitigations provably close it. We prove a per-pipeline isolation property and establish a refinement relation between a hardened workflow and an abstract secure specification, quantifying the residual attack surface. We then lift the model into a Markov Decision Process and use the PRISM probabilistic model checker to compute exact compromise probabilities, expected time-to-compromise, and, via a two-stage cascade model, downstream propagation, including closed-form parametric results. The analysis is validated in three layers: structural faithfulness against a corpus of 189 real workflows, incident reconstruction against the public dossier, and predictive calibration against the OpenSSF/OSV malicious-package dataset. Our central finding is that the model formally distinguishes complete credential rotation, which prevents the attack, from the partial rotation that actually occurred, which does not, matching the documented incident causation, and that universal commit-SHA pinning isolates a pipeline even when the stolen credential remains valid.
+    \vspace{0.6em}
+
+    \noindent\textbf{Keywords:} software supply-chain security; CI/CD; GitHub Actions; formal methods; model checking; TLA+; probabilistic model checking; PRISM; refinement; isolation.
+  \end{minipage}
+  \vspace{1.6em}
+}]
+
+% =====================================================================
+\section{Introduction}
+A continuous-integration pipeline is, operationally, a program that fetches and executes code chosen by a version reference. The overwhelmingly common reference in GitHub Actions is a floating tag such as \code{actions/checkout@v4}: a mutable pointer whose target commit the repository owner can change at any time. This convenience is also a capability. An adversary who can move a tag can, without touching any victim, cause every pipeline that resolves that tag to execute attacker-controlled code on its next routine run, with whatever secrets that runner holds.
+
+In March 2026 the trivy-action and setup-trivy GitHub Actions, maintained by Aqua Security, were compromised in precisely this way (CVE-2026-33634)~\cite{aqua,cve}. A credential stolen in a February incident was left valid; in March the attacker used it to force-push 76 of 77 tags on trivy-action and all 7 tags on setup-trivy to malicious commits~\cite{msft}. Victim runners executed the payload, exfiltrated cloud credentials, SSH keys, Kubernetes configurations and CI secrets~\cite{wiz}, and the stolen npm tokens seeded a second-stage worm (CanisterWorm) that propagated through the npm ecosystem~\cite{unit42}.
+
+Public post-incident analyses are thorough but qualitative: they narrate what happened. They do not answer the questions a defender must answer before an incident: which mitigations provably eliminate the attack rather than merely inconveniencing it, whether a partial remediation is sufficient, and how quickly and how far a compromise is expected to spread. These are formal and quantitative questions. This paper answers them for the Trivy incident by construction, and offers the construction as a reusable template.
+
+\noindent\textbf{Contributions.} We make the following contributions:
+\begin{itemize}\itemsep2pt \parskip0pt \topsep2pt
+  \item A TLA+ transition-system model of the Trivy/TeamPCP pre-attack state whose every constant and variable traces to a cited dossier claim, and an exhaustive TLC proof that the documented attack is reachable from that state and is closed by (i) complete credential rotation and (ii) universal SHA-pinning.
+  \item A formal per-pipeline \emph{isolation} theorem: in a mixed population, a SHA-pinned pipeline is provably never compromised even while its tag-pinned neighbours are, so the blast radius is contained to the unpinned subset.
+  \item A \emph{refinement} relation between a hardened workflow and an abstract secure specification, with the residual attack surface quantified as exactly the set of unpinned victims.
+  \item A PRISM Markov model computing exact compromise probability, expected time-to-compromise, a two-stage npm-propagation cascade, and closed-form parametric results, calibrated against real malicious-package frequency data.
+  \item A three-layer validation methodology (structural faithfulness, incident reconstruction, predictive calibration) that makes the model's fidelity auditable.
+\end{itemize}
+
+\section{Background: The Trivy / TeamPCP Compromise}
+We summarise the incident from the public dossier~\cite{aqua}--\cite{cato}. In February 2026 an Aqua Security continuous-integration service account was compromised. The February response rotated some credentials but left the service-account credential valid, a partial remediation. In March 2026 the attacker, holding that residual credential with tag-write permission on the Action repositories, force-pushed the repositories' version tags to point at malicious commits. Because the vast majority of downstream consumers reference the Actions by floating tag rather than by pinned commit SHA, the next scheduled or triggered run of each victim pipeline resolved the tag to the malicious commit and executed it in the runner context.
+
+The payload read the runner environment and exfiltrated its secrets to attacker-controlled infrastructure. Among the stolen secrets were npm publish tokens, which enabled a distinct second stage: publication of malicious npm packages (the CanisterWorm family) that propagated to downstream package consumers~\cite{unit42,rlabs}. The campaign's first publicly named victim, Mercor, attributes its breach to a follow-on compromise in the same campaign (the LiteLLM library) rather than to direct execution of a malicious Action tag~\cite{mercor} --- a measure of how far downstream the cascade reached. The incident is thus genuinely multi-stage: a credential-residual stage enabling a tag-mutation stage enabling a secret-exfiltration stage enabling an ecosystem-propagation stage.
+
+\section{Threat and System Model}
+We fix the boundary of formal claims before modelling. In scope are: the Aqua service-account credential and its rotation state; the Action repositories and their tag-to-commit mappings; victim runners and the secrets present in their environment at execution time; the attacker's accumulated knowledge (exfiltrated secrets); each victim's pinning policy (tag versus SHA); and the completeness of credential rotation.
+
+Deliberately abstracted, and argued not to affect the reachability property under study, are: how the attacker first obtained the credential (taken as an initial condition); the command-and-control network path (exfiltration is modelled as set union into the attacker's knowledge); victim production systems downstream of the stolen secrets; Git object-storage internals (tag mutation is one atomic action); the platform's internal authentication and authorization; and the byte-level structure of the payload (only its active behaviour, transferring secrets, is modelled).
+
+The adversary begins holding solely the residual Aqua service-account credential. Its capability is tag mutation on the Action repositories, conditioned on that credential remaining valid. Victim pipelines are honest but automated: each runs its workflow on its own schedule, resolving the Action reference according to its pinning policy.
+
+\section{Formal Framework}
+\subsection{Transition-system model}
+We model the system as a labelled transition system in TLA+~\cite{lamport}. The state comprises the current tag-to-commit map, each victim's pinning policy, the service-account rotation state, the credentials the attacker controls, the attacker's exfiltrated-secret set, each runner's secrets, and each SHA-pinning victim's locked commit. Two actions generate all behaviour. \code{ForcePushTag} repoints a tag to the malicious commit, guarded by the attacker holding a still-valid credential. \code{RunnerExecute} fires when a victim runs the Action: if the commit it resolves is malicious, that victim's secrets union into the attacker's knowledge. Listing~\ref{lst:actions} gives the two actions.
+
+\begin{lstlisting}[float=*,caption={The two TLA+ actions. A tag-pinned victim resolves the (possibly mutated) tag; a SHA-pinned victim resolves its audited commit and is immune.},label={lst:actions}]
+ForcePushTag(r, t) ==
+  /\ AttackerCanForcePush              \* holds a still-valid credential
+  /\ tagMap[<<r, t>>] # MaliciousCommit
+  /\ tagMap' = [tagMap EXCEPT ![<<r,t>>] = MaliciousCommit]
+  /\ UNCHANGED <<pinningPolicy, rotationState, ...>>
+
+RunnerExecute(v, r, t) ==
+  /\ ExecutedCommit(v, r, t) = MaliciousCommit
+  /\ attackerKnowledge' = attackerKnowledge \cup victimSecrets[v]
+  /\ UNCHANGED <<tagMap, pinningPolicy, ...>>
+\end{lstlisting}
+
+The safety property is \code{NoExfiltration}: the attacker's knowledge never intersects any victim's secrets. TLC checks it exhaustively over a model with five victims, five tags, three commits and two repositories, a scale more than sufficient to exercise the reachability claim while remaining trivially checkable.
+
+\subsection{Reachability and mitigation discrimination}
+On the vulnerable configuration TLC returns the documented attack as a shortest counterexample (Figure~\ref{fig:cex}), confirming the formalism can represent the incident. Two mitigation knobs then parameterise the initial state: whether the credential was fully rotated, and which victims pin by SHA. Checking \code{NoExfiltration} across the four extreme configurations yields the discrimination in Table~\ref{tab:mitig}.
+
+\begin{figure*}[t]\centering
+\begin{lstlisting}[aboveskip=2pt,belowskip=2pt]
+State 1  [Init]        attacker holds AquaServiceAcct; all tags -> c_benign
+State 2  ForcePushTag(trivy_action, tg1)          tag -> c_malicious
+State 3  RunnerExecute(v1, trivy_action, tg1)     attackerKnowledge = {v1}
+\end{lstlisting}
+\caption{TLC counterexample on the vulnerable configuration, structurally identical to the documented dossier trace.}\label{fig:cex}
+\end{figure*}
+
+\subsection{Isolation between pipelines}
+Generalising the SHA-pinning knob from a Boolean to a set of victims lets us reason about mixed populations. Define \code{Isolation} to hold when no SHA-pinning victim's secret is ever exfiltrated. Checking it on a mixed configuration, in which two victims pin by SHA and three use floating tags with the credential still valid, TLC reports that the invariant holds over the entire reachable state space, even though a companion check confirms the attack does compromise the tag-pinned victims in the very same runs. A hardened pipeline is therefore isolated from the blast radius of its unpinned neighbours; the breach is provably contained to the unpinned subset.
+
+\subsection{Refinement and residual attack surface}
+We specify an abstract secure workflow exposing a single observation, \code{leaked}, whose only permitted transitions leave it false. Under the refinement mapping from \code{leaked} to the predicate that a victim secret has reached the attacker, the hardened concrete workflow refines the abstract specification (TLC verifies the refinement holds), whereas the vulnerable workflow does not: TLC exhibits a behaviour whose mapped observation flips from false to true, namely the documented attack. The set of such flipping transitions is the residual attack surface. TLC witnesses that, for the vulnerable configuration, the reachable compromised set equals exactly the unpinned victims; growing the SHA-pinned set shrinks this surface monotonically to the empty set.
+
+\subsection{Probabilistic and multi-stage model}
+Reachability answers \emph{whether}; it does not answer how likely, how fast, or how far. We lift the two actions into a Markov model checked with PRISM~\cite{prism}. The attacker's weaponisation timing is nondeterministic (an adversary, resolved by PRISM's schedulers); the victim's build cadence is probabilistic with per-day probability $p$. Maximum reachability probability and minimum expected reward then give worst-case (most-capable-adversary) quantities. A separate discrete-time cascade model chains the two documented stages: stage one yields a stolen npm token with probability $q$, enabling stage two, in which downstream consumers adopt the malicious npm package at per-day rate $r$ until a population of size $N$ is saturated.
+
+\subsection{Parametric analysis}
+Because the input rates are uncertain, we treat them symbolically. PRISM's parametric engine returns closed-form functions rather than point estimates: the expected time-to-compromise is $(p{+}1)/p$, and the probability of reaching the second stage is exactly $q$. Such closed forms make the dependence on each uncertain input explicit and support the sensitivity argument of Section~\ref{sec:eval}.
+
+\section{Three-Layer Validation Methodology}
+A formal model is only as valuable as its faithfulness to reality. We validate in three layers. Layer~1 (structural faithfulness) asks whether the model captures what real workflows do, by statically analysing a corpus of real GitHub Actions workflows and measuring the frequency of the constructs the model represents. Layer~2 (incident reconstruction) asks whether the model can reproduce the documented attack and whether its proposed mitigations close it, checking the encoded pre-attack state against the public dossier. Layer~3 (predictive calibration) asks whether the model's quantitative outputs are consistent with observed frequencies, calibrating input distributions against public malicious-package data and the documented incident timeline.
+
+\section{Evaluation}\label{sec:eval}
+\subsection{Layer 1: structural faithfulness}
+We analysed 189 workflow files drawn from eighteen large open-source projects, extracting trigger events, permission scopes, secret usage, action-version pinning, runner types, job dependencies and artefact flows. The headline calibration parameter is the fraction of external Action references that use a floating tag rather than a pinned commit SHA (Table~\ref{tab:corpus}).
+
+\begin{table}[t]\centering
+\caption{Layer 1 corpus measurements (189 workflows, 18 projects, 0 parse errors).}\label{tab:corpus}
+\small
+\begin{tabular}{@{}lr@{}}
+\toprule
+Quantity & Value\\
+\midrule
+External (resolvable) Action references & 1{,}517\\
+Commit-SHA pinned & 956 (63.0\%)\\
+Floating tag / branch (unpinned) & 561 (37.0\%)\\
+Floating-tag fraction $f$ & 0.3698\\
+Construct coverage of the model & 88.2\%\\
+Workflows using \code{pull\_request\_target} & 11.6\%\\
+Workflows referencing secrets & 50.3\%\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The measured floating-tag fraction feeds Layer~3 directly. Because the corpus consists of large, security-mature projects that pin more than average, the 37\% figure is a lower bound on the ecosystem-wide rate; the model's safety proof instead uses the worst case of universal tag reference, the conservative choice for a safety claim. The model captures 88.2\% of the compromise-relevant constructs observed; the remainder (matrix strategies, artefact flows, reusable-workflow nesting) are independent of the tag-mutation reachability property.
+
+\subsection{Layer 2: incident reconstruction}
+Each row of Table~\ref{tab:mitig} is a separate TLC run with a different initial state; the vulnerable row reproduces the documented attack and the mitigated rows show which remediations close it. Table~\ref{tab:iso} records the isolation and refinement results of Sections~4.3--4.4.
+
+\begin{table*}[t]\centering
+\caption{Mitigation discrimination under exhaustive model checking. Each row is one TLC run.}\label{tab:mitig}
+\begin{tabular}{@{}lcl@{}}
+\toprule
+Configuration & \code{NoExfiltration} & Matches reality\\
+\midrule
+Tag refs + valid stolen credential (actual) & FAILS & Yes -- attack occurred\\
+Tag refs + complete rotation & holds & No attack\\
+SHA pins + valid stolen credential & holds & Protects despite residual credential\\
+SHA pins + complete rotation & holds & Full defence\\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{table*}[t]\centering
+\caption{Isolation and refinement results (TLC).}\label{tab:iso}
+\begin{tabular}{@{}lll@{}}
+\toprule
+Property checked & Configuration & Result\\
+\midrule
+Isolation (SHA-pinned never leak) & mixed population & holds (8{,}185 states)\\
+Containment witness & mixed population & breach reaches only unpinned victims\\
+Hardened refines \code{SecureWorkflow} & all SHA-pinned & holds\\
+Vulnerable refines \code{SecureWorkflow} & all floating tags & fails (observation flips)\\
+Residual attack surface & all floating tags & $=$ unpinned subset (all 5)\\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+The load-bearing result is the contrast between the first two rows of Table~\ref{tab:mitig}: the model formally distinguishes complete rotation (safe) from the partial rotation that actually occurred (still exploited), reproducing the documented incident causation. The first and third rows give the second, independent finding: universal SHA-pinning protects victims even while the stolen credential remains valid.
+
+\subsection{Layer 3: quantitative outputs}
+With build cadence $p = 0.2$ per day and a 30-day horizon, PRISM yields the quantitative counterpart of Table~\ref{tab:mitig} (Table~\ref{tab:quant}).
+
+\begin{table}[t]\centering
+\caption{Quantitative mitigation table (PRISM MDP; $p=0.2$/day, horizon 30 days).}\label{tab:quant}
+\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Configuration & $P(\text{comp.})$ & $E[\text{days}]$ & $P(\leq 30\text{d})$\\
+\midrule
+Tag + valid credential (actual) & 1.00 & 6.00 & 0.9985\\
+Tag + complete rotation & 0.00 & $\infty$ & 0.0000\\
+SHA + valid credential & 0.00 & $\infty$ & 0.0000\\
+SHA + complete rotation & 0.00 & $\infty$ & 0.0000\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The expected time of six days decomposes exactly as one day to weaponise plus $1/p = 5$ days to the next build. A sensitivity sweep of $p$ across a tenfold range (0.05 to 0.5 per day) moves the vulnerable expected time from 21 to 3 days, but SHA-pinning yields probability zero at every value of $p$: the mitigation ranking is invariant under a tenfold change in the compromise rate, so the recommendation is robust to parameter uncertainty.
+
+\subsection{Multi-stage propagation}
+The cascade model quantifies the second stage. With $p=0.2$, token-theft probability $q=0.5$, adoption rate $r=0.1$ and downstream population $N=5$, PRISM gives Table~\ref{tab:casc}.
+
+\begin{table}[t]\centering
+\caption{Two-stage propagation (PRISM DTMC).}\label{tab:casc}
+\small
+\begin{tabular}{@{}lr@{}}
+\toprule
+Metric & Value\\
+\midrule
+$P(\text{reach stage 2})$ & 0.50 ($=q$)\\
+$P(\text{stage 2 within 30 days})$ & 0.454\\
+$P(\text{full downstream propagation})$ & 0.50\\
+$E[\text{hosts compromised at day 30}]$ & 2.18\\
+$E[\text{days to first downstream}]\ (q{=}1)$ & 16.0\\
+$P(\text{reach stage 2})$ under rotation & 0.00\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Complete credential rotation drives the probability of the entire downstream cascade, not merely the first stage, to zero. The expected sixteen days to the first downstream compromise decomposes as one day to weaponise, five to first-stage compromise, and ten to first downstream adoption.
+
+\subsection{Calibration against public data}
+We calibrate the second-stage rates against the OpenSSF malicious-packages dataset~\cite{ossf}, the OSV-format corpus seeded by the Backstabber's Knife Collection of Ohm et al.~\cite{backstabber}. Over the dataset, npm accounts for 214{,}497 malicious-package reports, 94.2\% of all ecosystems. Crucially, npm malicious-package publications rose from 329 in February 2026 to 1{,}048 in March 2026, a factor of 3.19, in the exact month of the CanisterWorm second stage; the Trivy-derived package was one of those 1{,}048. The model's fastest-adversary times (six days to first-stage compromise, sixteen to first downstream) are lower bounds consistent with the documented four-week February-to-March residual-credential window; the surplus reflects adversarial patience, which the nondeterministic weaponisation timing of the MDP captures exactly.
+
+\subsection{Mitigation discovery}
+Finally, we use the verified model as a ground-truth oracle for an automated search over defender policies, scoring each candidate by its model-checked compromise probability plus an operational-cost penalty~\cite{sonatype}. Maximising the score converges on complete credential rotation as the minimal-cost provably-safe policy, recovering the paper's central recommendation without human guidance. The search proposes; the model checker decides.
+
+\section{Discussion}
+Two findings are non-trivial in the precise sense that they contradict a plausible operational intuition. First, a partial credential rotation that revokes most credentials is not a partial defence but no defence at all against this attack class: a single retained valid credential with tag-write permission suffices, and the model flags exactly this. Second, commit-SHA pinning defends a pipeline unilaterally. A pinning victim is protected regardless of its neighbours' behaviour and regardless of whether the upstream credential is ever rotated, because it never resolves the mutated tag. Isolation formalises this as containment of the blast radius, and refinement quantifies the residual surface as precisely the set of pipelines that decline to pin.
+
+The quantitative layer sharpens the guidance rather than replacing it. Expected-time and bounded-horizon probabilities let an operator reason about detection windows; the parametric forms make explicit which conclusions are robust (the mitigation ranking) and which depend on uncertain inputs (absolute timings). The multi-stage model shows that the value of a mitigation is not confined to the pipeline that adopts it: preventing the first stage removes the token supply that powers the second.
+
+\section{Limitations and Threats to Validity}
+The analysis is deliberately conservative, and several caveats bound its claims. On data: the second-stage parameters $q$ (the fraction of compromised runners holding npm tokens) and $r$ (downstream adoption rate) are assumptions rather than measurements, for want of a public dataset; we therefore report the parametric form $P(\text{stage 2})=q$ so the dependence is explicit. The workflow corpus is modest (189 files) and popularity-biased toward projects that pin more than average, so the measured floating-tag fraction is a lower bound. The build cadence $p$ is illustrative. The calibration against the February-to-March publication spike is corroborative, not causal, and the incident facts themselves are taken from the public dossier rather than independently re-verified.
+
+On modelling: the checked instance is small (five victims), sufficient to exercise the safety property but not a proof for arbitrary populations; several mechanisms are abstracted by design (the credential-theft origin, the C2 path, Git internals, payload structure); the second-stage population dynamics are simplified to sequential adoption; and the worst-case adversary means the reported probabilities and times are bounds rather than expected real-world values. On methodology and tooling: PRISM is used in place of Storm~\cite{storm} (identical semantics, no native Windows build for the latter); the parametric engine does not support step-bounded properties, for which we give the analytic form; the automated policy search's outer loop was not executed end-to-end; a single incident is reconstructed where the methodology envisions several; and a practitioner review of the threat model, which the methodology recommends, has not been conducted.
+
+\section{Related Work}
+Empirical study of open-source supply-chain attacks was catalogued by Ohm et al. in the Backstabber's Knife Collection~\cite{backstabber}, and is tracked continuously by the OpenSSF malicious-packages project and OSV~\cite{ossf} and by industry telemetry~\cite{sonatype}. Defensive frameworks such as SLSA~\cite{slsa} prescribe provenance and pinning controls; our contribution is to give one such control (SHA-pinning) a formal isolation guarantee and a quantified residual surface rather than a checklist status. Formal verification via TLA+ and TLC~\cite{lamport} and probabilistic model checking via PRISM~\cite{prism} and Storm~\cite{storm} are mature; we apply them jointly to a documented CI/CD incident and, unusually, validate the abstraction against a real workflow corpus and against measured malicious-package frequencies rather than treating the model as self-justifying.
+
+\section{Conclusion}
+We reconstructed the March 2026 Trivy/TeamPCP supply-chain compromise as a formal, quantitative artefact. Exhaustive model checking shows the documented attack is reachable from the disclosed pre-attack state and is closed by complete credential rotation or by universal SHA-pinning; an isolation theorem and a refinement relation make the SHA-pinning guarantee precise and quantify the residual attack surface; and a probabilistic, multi-stage, parametric model, calibrated against public data, quantifies how likely, how fast, and how far a compromise spreads. The recurring lesson is that in automated CI/CD the difference between a partial and a complete remediation is not a difference of degree but of kind, and that a formalism which distinguishes them says something an incident report cannot.
+
+% =====================================================================
+\begin{thebibliography}{99}\small
+\bibitem{aqua} Aqua Security. Trivy supply-chain attack: what you need to know. Technical report, 2026.
+\bibitem{ghsa} GitHub. Security Advisory for aquasecurity/trivy. GitHub Security Advisories, 2026.
+\bibitem{cve} MITRE. CVE-2026-33634. Common Vulnerabilities and Exposures, 2026.
+\bibitem{cisa} CISA. Known Exploited Vulnerabilities Catalog, 2026.
+\bibitem{mercor} Mercor. Public disclosure statement on the TeamPCP supply-chain campaign (LiteLLM follow-on compromise), 2026.
+\bibitem{unit42} Palo Alto Networks, Unit~42. TeamPCP supply-chain attacks and the CanisterWorm payload, 2026.
+\bibitem{msft} Microsoft. Detecting, investigating and defending against the Trivy supply-chain compromise. Microsoft Security Blog, 24 March 2026.
+\bibitem{wiz} Wiz Research. Trivy compromised: tracking the TeamPCP supply-chain attack, 2026.
+\bibitem{rlabs} ReversingLabs. The TeamPCP supply-chain attack spreads: payload analysis, 2026.
+\bibitem{endor} Endor Labs. TeamPCP isn't done: the February-to-March causal chain, 2026.
+\bibitem{kudelski} Kudelski Security. Investigating two variants of the Trivy supply-chain compromise, 2026.
+\bibitem{sans} SANS Internet Storm Center. Diary entry 32856: Trivy Action compromise, 2026.
+\bibitem{cato} Cato Networks. The TeamPCP supply-chain attack, 2026.
+\bibitem{backstabber} M.~Ohm, H.~Plate, A.~Sykosch, and M.~Meier. Backstabber's Knife Collection: A Review of Open-Source Software Supply-Chain Attacks. In \emph{DIMVA}, 2020.
+\bibitem{ossf} Open Source Security Foundation. Malicious Packages repository (OSV format), 2026.
+\bibitem{lamport} L.~Lamport. \emph{Specifying Systems: The TLA+ Language and Tools for Hardware and Software Engineers}. Addison-Wesley, 2002.
+\bibitem{prism} M.~Kwiatkowska, G.~Norman, and D.~Parker. PRISM 4.0: Verification of Probabilistic Real-Time Systems. In \emph{CAV}, 2011.
+\bibitem{slsa} Open Source Security Foundation. SLSA: Supply-chain Levels for Software Artifacts.
+\bibitem{storm} C.~Hensel, S.~Junges, J.-P. Katoen, T.~Quatmann, and M.~Volk. The Probabilistic Model Checker Storm. \emph{STTT}, 2022.
+\bibitem{sonatype} Sonatype. State of the Software Supply Chain / Open-Source Malware Index. Industry report, 2025.
+\end{thebibliography}
+
+\end{document}

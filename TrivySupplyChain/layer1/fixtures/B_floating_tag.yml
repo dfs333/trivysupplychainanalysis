@@ -1,0 +1,15 @@
+name: B
+on:
+  pull_request_target:
+  workflow_run:
+    workflows: ["A"]
+permissions: write-all
+jobs:
+  test:
+    runs-on: [self-hosted, linux]
+    strategy:
+      matrix:
+        node: [16, 18]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v3

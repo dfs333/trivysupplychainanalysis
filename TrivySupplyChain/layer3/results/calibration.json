@@ -1,0 +1,25 @@
+{
+  "source": "OpenSSF malicious-packages (OSV format); seeded by Backstabber's Knife Collection, Ohm et al. DIMVA 2020",
+  "npm_total_reports": 214497,
+  "npm_months_covered": 53,
+  "npm_window": "2021-11-01 .. 2026-06-01",
+  "npm_share_of_all_ecosystems_pct": 94.2,
+  "npm_mean_reports_per_month": 4047.1,
+  "npm_median_reports_per_month": 478,
+  "pypi_total": 11400,
+  "rubygems_total": 972,
+  "incident_window": {
+    "feb_2026_npm_malicious": 329,
+    "mar_2026_npm_malicious": 1048,
+    "feb_to_mar_ratio": 3.19,
+    "mar_2026_rate_per_day": 34.9
+  },
+  "model_mapping": {
+    "stage2_base_rate_lambda_per_day": 34.9,
+    "note_p_q_r": "p (build cadence) and r (downstream adoption) set the timing; q (token-theft fraction) set P(reach stage 2)=q exactly (parametric). The CanisterWorm npm package was 1 of the 1048 npm malicious packages published in the incident month (Mar 2026).",
+    "documented_residual_window_days": "~28 (Feb incident -> Mar attack)",
+    "model_fastest_adversary_days_stage1": 6,
+    "model_fastest_adversary_days_stage2_q1": 16,
+    "consistency": "model fastest-adversary times (6 / 16 days) are LOWER BOUNDS, consistent with the observed ~28-day Feb->Mar window; the surplus is adversarial patience, captured by the MDP's nondeterministic weaponization timing."
+  }
+}

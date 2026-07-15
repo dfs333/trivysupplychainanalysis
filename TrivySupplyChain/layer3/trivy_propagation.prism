@@ -1,0 +1,41 @@
+// =====================================================================
+// Layer 3 - population / propagation model.
+//
+// Instead of a single victim, draw a representative victim's configuration
+// from the corpus distribution measured in Layer 1: a fraction f of victims
+// reference the action by a floating TAG (vulnerable), the rest pin by SHA.
+//
+// Pmax=? [ F "compromise" ] then equals the expected FRACTION of the victim
+// population that is compromised when a malicious tag enters the ecosystem
+// and the residual credential is still valid -- i.e. the downstream
+// propagation rate the paper calibrates against reported incident counts.
+// =====================================================================
+
+mdp
+
+const double f;      // fraction of victims that reference the action by tag (Layer 1)
+const double p;      // build cadence per day, in (0,1]
+const int rotated;   // 0 or 1
+
+module population
+
+    pinning     : [0..2] init 0;    // 0 = undrawn, 1 = tag-pinned, 2 = SHA-pinned
+    weaponized  : bool init false;
+    compromised : bool init false;
+
+    // Draw this victim's pinning policy from the corpus distribution.
+    [] pinning = 0 -> f:(pinning' = 1) + (1 - f):(pinning' = 2);
+
+    // Adversary weaponizes (nondeterministic timing; needs valid credential).
+    [day] pinning != 0 & !weaponized & !compromised & (rotated = 0) -> (weaponized' = true);
+    [day] pinning != 0 & !weaponized & !compromised -> true;
+
+    // Tag-pinned victims are exposed; SHA-pinned victims are immune.
+    [day] pinning = 1 & weaponized & !compromised -> p:(compromised' = true) + (1 - p):true;
+    [day] pinning = 2 & weaponized & !compromised -> true;
+
+    [day] compromised -> true;
+
+endmodule
+
+label "compromise" = compromised;

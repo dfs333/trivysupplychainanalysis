@@ -1,0 +1,50 @@
+TLC2 Version 2.19 of 08 August 2024 (rev: 5a47802)
+Running breadth-first search Model-Checking with fp 64 and seed -6968142101238198332 with 1 worker on 16 cores with 7236MB heap and 64MB offheap memory [pid: 12384] (Windows 11 10.0 amd64, Oracle Corporation 20.0.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file C:\Users\Franklin\Desktop\QQT\TrivySupplyChain\MCRefine.tla
+Parsing file C:\Users\Franklin\Desktop\QQT\TrivySupplyChain\TrivySupplyChain.tla
+Parsing file C:\Users\Franklin\AppData\Local\Temp\Naturals.tla
+Parsing file C:\Users\Franklin\AppData\Local\Temp\FiniteSets.tla
+Parsing file C:\Users\Franklin\Desktop\QQT\TrivySupplyChain\SecureWorkflow.tla
+Parsing file C:\Users\Franklin\AppData\Local\Temp\Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TrivySupplyChain
+Semantic processing of module SecureWorkflow
+Semantic processing of module MCRefine
+Starting... (2026-07-14 23:43:14)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-07-14 23:43:14.
+Error: Action property line 21, col 23 to line 21, col 40 of module SecureWorkflow is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ maintainerCreds = {AquaServiceAcct}
+/\ tagMap = (<<trivy_action, tg1>> :> c_benign @@ <<trivy_action, tg2>> :> c_benign @@ <<trivy_action, tg3>> :> c_benign @@ <<trivy_action, tg4>> :> c_benign @@ <<trivy_action, tg5>> :> c_benign @@ <<setup_trivy, tg1>> :> c_benign @@ <<setup_trivy, tg2>> :> c_benign @@ <<setup_trivy, tg3>> :> c_benign @@ <<setup_trivy, tg4>> :> c_benign @@ <<setup_trivy, tg5>> :> c_benign)
+/\ victimPin = (v1 :> c_benign @@ v2 :> c_benign @@ v3 :> c_benign @@ v4 :> c_benign @@ v5 :> c_benign)
+/\ pinningPolicy = (v1 :> "tag" @@ v2 :> "tag" @@ v3 :> "tag" @@ v4 :> "tag" @@ v5 :> "tag")
+/\ attackerKnowledge = {}
+/\ rotationState = (AquaServiceAcct :> "valid")
+/\ victimSecrets = (v1 :> {v1} @@ v2 :> {v2} @@ v3 :> {v3} @@ v4 :> {v4} @@ v5 :> {v5})
+
+State 2: <ForcePushTag line 122, col 5 to line 126, col 64 of module TrivySupplyChain>
+/\ maintainerCreds = {AquaServiceAcct}
+/\ tagMap = (<<trivy_action, tg1>> :> c_malicious @@ <<trivy_action, tg2>> :> c_benign @@ <<trivy_action, tg3>> :> c_benign @@ <<trivy_action, tg4>> :> c_benign @@ <<trivy_action, tg5>> :> c_benign @@ <<setup_trivy, tg1>> :> c_benign @@ <<setup_trivy, tg2>> :> c_benign @@ <<setup_trivy, tg3>> :> c_benign @@ <<setup_trivy, tg4>> :> c_benign @@ <<setup_trivy, tg5>> :> c_benign)
+/\ victimPin = (v1 :> c_benign @@ v2 :> c_benign @@ v3 :> c_benign @@ v4 :> c_benign @@ v5 :> c_benign)
+/\ pinningPolicy = (v1 :> "tag" @@ v2 :> "tag" @@ v3 :> "tag" @@ v4 :> "tag" @@ v5 :> "tag")
+/\ attackerKnowledge = {}
+/\ rotationState = (AquaServiceAcct :> "valid")
+/\ victimSecrets = (v1 :> {v1} @@ v2 :> {v2} @@ v3 :> {v3} @@ v4 :> {v4} @@ v5 :> {v5})
+
+State 3: <RunnerExecute line 132, col 5 to line 135, col 45 of module TrivySupplyChain>
+/\ maintainerCreds = {AquaServiceAcct}
+/\ tagMap = (<<trivy_action, tg1>> :> c_malicious @@ <<trivy_action, tg2>> :> c_benign @@ <<trivy_action, tg3>> :> c_benign @@ <<trivy_action, tg4>> :> c_benign @@ <<trivy_action, tg5>> :> c_benign @@ <<setup_trivy, tg1>> :> c_benign @@ <<setup_trivy, tg2>> :> c_benign @@ <<setup_trivy, tg3>> :> c_benign @@ <<setup_trivy, tg4>> :> c_benign @@ <<setup_trivy, tg5>> :> c_benign)
+/\ victimPin = (v1 :> c_benign @@ v2 :> c_benign @@ v3 :> c_benign @@ v4 :> c_benign @@ v5 :> c_benign)
+/\ pinningPolicy = (v1 :> "tag" @@ v2 :> "tag" @@ v3 :> "tag" @@ v4 :> "tag" @@ v5 :> "tag")
+/\ attackerKnowledge = {v1}
+/\ rotationState = (AquaServiceAcct :> "valid")
+/\ victimSecrets = (v1 :> {v1} @@ v2 :> {v2} @@ v3 :> {v3} @@ v4 :> {v4} @@ v5 :> {v5})
+
+21 states generated, 21 distinct states found, 18 states left on queue.
+The depth of the complete state graph search is 3.
+The average outdegree of the complete state graph is 10 (minimum is 10, the maximum 10 and the 95th percentile is 10).
+Finished in 00s at (2026-07-14 23:43:14)

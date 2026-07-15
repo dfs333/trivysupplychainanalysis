@@ -1,0 +1,16 @@
+// Quantitative properties for trivy_mdp.prism.
+// T (horizon, in days) is supplied on the command line, e.g. -const T=30.
+const int T;
+
+// (1) Maximum probability, over all adversary strategies, that the victim is
+//     ever compromised.  Vulnerable config -> 1; mitigated configs -> 0.
+Pmax=? [ F "compromise" ];
+
+// (2) Minimum expected number of days to compromise under the fastest
+//     adversary.  Infinite (compromise unreachable) for mitigated configs.
+R{"days_to_compromise"}min=? [ F "compromise" ];
+
+// (3) Probability the victim is compromised within T days (adversary-optimal).
+//     Produces the bounded-horizon compromise curve used for calibration
+//     ("probability of compromise within 30 days").
+Pmax=? [ F<=T "compromise" ];

@@ -1,0 +1,10 @@
+// Parametric properties (functions of p). T supplied via -const T=...
+const int T;
+
+// (1) Expected days-to-compromise as a closed-form function of p
+//     (the parametric form of the discrete sensitivity sweep; equals 1 + 1/p).
+R{"days_to_compromise"}=? [ F "compromise" ];
+
+// (2) Probability of compromise within T days as a polynomial in p
+//     (equals 1 - (1-p)^(T-1) for the vulnerable configuration).
+P=? [ F<=T "compromise" ];

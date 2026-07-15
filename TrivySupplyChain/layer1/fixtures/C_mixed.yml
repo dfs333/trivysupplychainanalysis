@@ -1,0 +1,13 @@
+name: C
+on: [push, pull_request]
+jobs:
+  call:
+    uses: ./.github/workflows/reusable.yml
+  build:
+    needs: call
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/upload-artifact@0123456789abcdef0123456789abcdef01234567
+      - uses: docker://alpine:3.18
+      - run: deploy ${{ secrets.DEPLOY_KEY }} ${{ secrets.AWS }}

@@ -1,0 +1,72 @@
+// =====================================================================
+// Layer 3 (extension) - MULTI-STAGE propagation.
+//
+// The Trivy / TeamPCP attack was multi-stage: stage 1 compromised victim
+// runners via the trivy-action tag mutation and EXFILTRATED npm publish
+// tokens; those tokens enabled stage 2 - publication of the "CanisterWorm"
+// malicious npm package, which then propagated to DOWNSTREAM npm consumers.
+//
+// This DTMC chains the two stages so we can quantify propagation:
+//   stage 1: weaponize tag -> a victim runner runs (cadence p) -> compromise;
+//            at compromise the victim holds an npm token with probability q,
+//            granting stage-2 publish capability.
+//   stage 2: with a stolen token, downstream consumers adopt the malicious
+//            package at per-day rate r until the population N2 is saturated.
+//
+// Knob: rotated = 1  => the residual credential was rotated, stage 1 (and
+//                       therefore the whole cascade) never starts.
+// =====================================================================
+
+dtmc
+
+const double p;     // stage-1 build cadence (victim runs / day)
+const double q;     // P(a compromised stage-1 victim holds an npm publish token)
+const double r;     // stage-2 per-day adoption rate of the malicious npm package
+const int    N2;    // downstream consumer population (stage 2)
+const int    rotated; // 1 => credential rotated: no cascade
+
+module cascade
+
+    weap  : bool init false;   // trivy-action tag weaponized (stage-1 trigger present)
+    done1 : bool init false;   // stage-1 outcome resolved (compromise + token draw)
+    s1    : bool init false;   // a stage-1 victim runner was compromised
+    token : bool init false;   // an npm publish token was stolen (stage-2 capability)
+    s2    : [0..N2] init 0;    // number of downstream (stage-2) consumers compromised
+
+    // rotated: the cascade never starts (absorbing).
+    [day] rotated = 1 -> true;
+
+    // stage 1: weaponize the tag.
+    [day] rotated = 0 & !weap -> (weap' = true);
+
+    // stage 1: the victim's workflow runs (prob p); at compromise an npm token is
+    // present with probability q (drawn once, at compromise time).
+    [day] rotated = 0 & weap & !done1 ->
+            p*q     : (s1' = true) & (token' = true) & (done1' = true)
+          + p*(1-q) : (s1' = true) & (done1' = true)
+          + (1-p)   : true;
+
+    // stage 2: with a stolen token, downstream consumers adopt the package.
+    [day] rotated = 0 & done1 & token & s2 < N2 -> r:(s2' = s2 + 1) + (1-r):true;
+
+    // absorbing tails: stage 1 resolved with no token, or stage 2 saturated.
+    [day] rotated = 0 & done1 & !token -> true;
+    [day] rotated = 0 & done1 & token & s2 = N2 -> true;
+
+endmodule
+
+// number of compromised hosts so far (stage 1 victim + downstream consumers)
+formula footprint = (s1 ? 1 : 0) + s2;
+
+label "stage2"    = s2 >= 1;          // the cascade reached the second stage
+label "saturated" = s2 = N2;          // full downstream propagation
+
+// time (days) until the first downstream (stage-2) compromise
+rewards "days_to_stage2"
+    [day] s2 = 0 : 1;
+endrewards
+
+// instantaneous footprint, for "expected hosts compromised at day T"
+rewards "footprint"
+    true : footprint;
+endrewards

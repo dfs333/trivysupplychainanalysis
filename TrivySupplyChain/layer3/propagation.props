@@ -1,0 +1,4 @@
+// Expected fraction of the victim population compromised when a malicious tag
+// enters the ecosystem and the residual credential is still valid.
+// Equals f (the corpus tag-pinning fraction) -- the downstream propagation rate.
+Pmax=? [ F "compromise" ];

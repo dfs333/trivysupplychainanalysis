@@ -1,0 +1,34 @@
+// =====================================================================
+// Layer 3 - PARAMETRIC model.  Same compromise dynamics as trivy_mdp, but
+// the attacker weaponizes immediately (deterministic), making this a DTMC
+// whose answers PRISM's PARAMETRIC engine returns as CLOSED-FORM rational
+// functions of the build-cadence parameter p -- i.e. true parametric model
+// checking, not a discrete sweep.  Run with:  -param p=0:1
+// =====================================================================
+
+dtmc
+
+const double p;       // build cadence (PARAMETER; supplied via -param p=lo:hi)
+const int rotated;    // 0/1 fixed per run
+const int shaPin;     // 0/1 fixed per run
+
+module pipeline
+    weap : bool init false;
+    comp : bool init false;
+
+    // attacker weaponizes immediately (deterministic) if the credential is valid
+    [day] rotated = 0 & !weap & !comp -> (weap' = true);
+    // rotated: no weaponization, absorbing
+    [day] rotated = 1 & !comp -> true;
+    // tag-pinned victim runs with prob p and is compromised; SHA-pinned is immune
+    [day] rotated = 0 & weap & !comp & shaPin = 0 -> p:(comp' = true) + (1-p):true;
+    [day] rotated = 0 & weap & !comp & shaPin = 1 -> true;
+    // absorbing once compromised
+    [day] comp -> true;
+endmodule
+
+label "compromise" = comp;
+
+rewards "days_to_compromise"
+    [day] !comp : 1;
+endrewards
