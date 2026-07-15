@@ -80,8 +80,7 @@ TrivySupplyChain/            The model + verification harness
   env-check.ps1              One-shot environment doctor
 Trivy-USENIX-paper/          USENIX-style LaTeX source (main.tex, compiles standalone)
 DOCS/                        Generated Word versions of the paper / results
-PreReq/                      Source dossier materials (read-only inputs)
-HANDOFF.md                   Cross-session status & environment notes
+Trivy-TeamPCP-Dossier.md     Incident dossier — the sourced evidence base (read-only)
 ```
 
 ---
