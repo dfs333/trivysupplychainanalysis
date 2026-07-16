@@ -10,9 +10,10 @@
 #     commit SHA (e.g. `actions/checkout@<sha>  # v4`).
 #
 # Layer 1 (Python) runs on Linux; Layer 2 (TLA+/TLC, bundled JAR) runs on
-# Windows via the project's PowerShell driver. Layer 3 (PRISM) depends on a
-# native Windows DLL plus the Git-for-Windows MinGW runtime and is run locally
-# (see layer3/run-layer3.ps1), not in CI.
+# Windows via the project's PowerShell driver. Layer 3 (PRISM) also runs on
+# Windows but drives a native DLL + the Git-for-Windows MinGW runtime, so it is
+# included as a NON-BLOCKING job for now (continue-on-error) until it has proven
+# stable across runs; then it can be promoted to a required job.
 
 name: verify
 
@@ -56,3 +57,22 @@ jobs:
         shell: pwsh
         working-directory: TrivySupplyChain
         run: ./run-all.ps1
+
+  layer3-prism:
+    name: Layer 3 - PRISM quantitative model (non-blocking)
+    runs-on: windows-latest
+    # Non-blocking for now: Layer 3 drives PRISM's native prism.dll (CUDD), which
+    # needs the Git-for-Windows MinGW runtime DLLs. windows-latest ships Git for
+    # Windows, so this should work -- once it is green across a few runs, remove
+    # continue-on-error to make it a required gate.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Run the PRISM quantitative suite
+        shell: pwsh
+        working-directory: TrivySupplyChain/layer3
+        run: ./run-layer3.ps1
