@@ -24,6 +24,7 @@ version: 1.0.0
 date-released: '2026-07-15'
 license: Apache-2.0
 repository-code: 'https://github.com/dfs333/trivysupplychainanalysis'
+doi: 10.5281/zenodo.21387135
 keywords:
   - supply-chain security
   - GitHub Actions

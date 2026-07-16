@@ -9,6 +9,7 @@ exhaustively with TLC, and quantified with the PRISM probabilistic model checker
 ![corpus](https://img.shields.io/badge/corpus-189%20real%20workflows-informational)
 ![CVE](https://img.shields.io/badge/incident-CVE--2026--33634-critical)
 [![verify](https://github.com/dfs333/trivysupplychainanalysis/actions/workflows/verify.yml/badge.svg)](https://github.com/dfs333/trivysupplychainanalysis/actions/workflows/verify.yml)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21387135.svg)](https://doi.org/10.5281/zenodo.21387135)
 
 > **Every number in the paper regenerates from this repository.** The model, the
 > probabilities, the corpus measurements, and the calibration all reproduce from source
