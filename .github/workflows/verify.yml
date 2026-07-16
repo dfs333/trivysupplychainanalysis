@@ -3,11 +3,9 @@
 # Practicing what the paper preaches:
 #   * permissions are least-privilege (read-only GITHUB_TOKEN), the Layer 1
 #     finding's recommendation for CI workflows;
-#   * these first-party actions are referenced by major-version tag for
-#     readability. This project's central finding is that GitHub Actions should
-#     be pinned to full commit SHAs, not floating tags -- in a production
-#     pipeline following the paper, replace each `@vN` below with a full 40-char
-#     commit SHA (e.g. `actions/checkout@<sha>  # v4`).
+#   * every action is pinned to a full commit SHA (not a floating tag) -- the
+#     exact mitigation this project's central finding recommends. The trailing
+#     `# vX.Y.Z` comment records the human-readable version each SHA resolves to.
 #
 # Layer 1 (Python) runs on Linux; Layer 2 (TLA+/TLC, bundled JAR) runs on
 # Windows via the project's PowerShell driver. Layer 3 (PRISM) also runs on
@@ -30,8 +28,8 @@ jobs:
     name: Layer 1 - corpus analyzer (Python)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6.3.0
         with:
           python-version: '3.13'
       - name: Install dependencies
@@ -47,8 +45,8 @@ jobs:
     name: Layer 2 - TLA+/TLC incident reconstruction
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      - uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a  # v5.5.0
         with:
           distribution: temurin
           java-version: '21'
@@ -63,8 +61,8 @@ jobs:
     # Required gate: PRISM's native prism.dll (CUDD) runs on windows-latest using
     # the Git-for-Windows MinGW runtime DLLs (verified green in CI).
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      - uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a  # v5.5.0
         with:
           distribution: temurin
           java-version: '21'

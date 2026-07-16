@@ -71,7 +71,7 @@ add(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 120, aft
 add(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 120 },
   children: [new TextRun({ text: "A Formal-Methods Reconstruction of the Trivy / TeamPCP Compromise (CVE-2026-33634)", italics: true, font: SERIF, size: 23, color: MUTE })] }));
 add(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 10 }, children: [new TextRun({ text: "Franklin Hanna", font: SERIF, size: 22 })] }));
-add(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 160 }, children: [new TextRun({ text: "[Affiliation]      [email]", font: SERIF, size: 20, color: MUTE })] }));
+add(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 160 }, children: [new TextRun({ text: "Independent Scholar      franklinhanna9@gmail.com", font: SERIF, size: 20, color: MUTE })] }));
 // Abstract full width (single indented block, USENIX places it before the columns)
 add(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 40 }, children: [new TextRun({ text: "Abstract", bold: true, font: SERIF, size: 21 })] }));
 add(new Paragraph({ alignment: AlignmentType.JUSTIFIED, spacing: { after: 80, line: 240 }, indent: { left: 720, right: 720 },
