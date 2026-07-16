@@ -1,0 +1,24 @@
+{
+  "title": "Formal Analysis of the Trivy / TeamPCP GitHub Actions Supply-Chain Attack (CVE-2026-33634)",
+  "upload_type": "software",
+  "access_right": "open",
+  "license": "Apache-2.0",
+  "creators": [
+    { "name": "Hanna, Franklin", "affiliation": "Independent Scholar" }
+  ],
+  "description": "A formally verified, quantitative reconstruction of the March-2026 Trivy / TeamPCP GitHub Actions supply-chain compromise (CVE-2026-33634). Three validation layers: (1) a static analyzer over a 189-workflow corpus that grounds the model's assumptions; (2) a TLA+/TLC incident-reconstruction model proving which mitigations close the attack (per-pipeline isolation, a refinement relation, and the residual attack surface); (3) a PRISM probabilistic model for compromise probabilities, expected times, a two-stage npm cascade, and closed-form parametric results, calibrated against public malicious-package data. Includes an LLM-driven mitigation search whose every candidate is verified by the PRISM oracle. The software and formal-methods artifacts are licensed Apache-2.0; the paper text is licensed CC-BY-4.0.",
+  "keywords": [
+    "supply-chain security",
+    "GitHub Actions",
+    "formal methods",
+    "model checking",
+    "TLA+",
+    "PRISM",
+    "probabilistic model checking",
+    "reproducible research",
+    "CVE-2026-33634"
+  ],
+  "related_identifiers": [
+    { "identifier": "CVE-2026-33634", "relation": "references", "scheme": "cve" }
+  ]
+}
