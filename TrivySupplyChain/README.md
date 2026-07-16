@@ -138,7 +138,7 @@ real `C:\Program Files\Java\jdk-20\bin\java.exe` (or `JAVA_HOME`).
 
 ```powershell
 # Reproduce the whole validation table + trace check in one shot:
-powershell -ExecutionPolicy Bypass -File .\run-all.ps1
+powershell -File .\run-all.ps1
 ```
 
 Run a single configuration manually:

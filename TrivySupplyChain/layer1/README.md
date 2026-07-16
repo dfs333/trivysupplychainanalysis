@@ -18,8 +18,8 @@ assumption and the Layer 3 propagation parameter.
 | `results/corpus_report.{json,md}` | Generated results. |
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\run-layer1.ps1          # tests + analyze
-powershell -ExecutionPolicy Bypass -File .\run-layer1.ps1 -Fetch   # also re-fetch corpus
+powershell -File .\run-layer1.ps1          # tests + analyze
+powershell -File .\run-layer1.ps1 -Fetch   # also re-fetch corpus
 ```
 
 ## Results (sample corpus: 189 workflows, 18 major OSS projects, 0 parse errors)

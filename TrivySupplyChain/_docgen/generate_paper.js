@@ -90,7 +90,7 @@ children.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after:
 children.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 160, after: 20 },
   children: [new TextRun({ text: "Franklin Hanna", font: SERIF, size: 22, color: INK })] }));
 children.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 20 },
-  children: [new TextRun({ text: "[Affiliation]  ·  [email]", font: SERIF, size: 20, color: MUTE })] }));
+  children: [new TextRun({ text: "Independent Scholar  ·  franklinhanna9@gmail.com", font: SERIF, size: 20, color: MUTE })] }));
 children.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 200 },
   children: [new TextRun({ text: "Preprint — June 2026", font: SERIF, size: 19, color: MUTE })] }));
 

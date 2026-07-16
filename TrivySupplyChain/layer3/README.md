@@ -63,7 +63,7 @@ that PRISM's native CUDD library (`prism.dll`) depends on — `libgcc_s_seh-1.dl
 (`C:\Program Files\Git\mingw64\bin`), which `run-layer3.ps1` adds to `PATH` automatically.
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\run-layer3.ps1
+powershell -File .\run-layer3.ps1
 ```
 
 PRISM itself lives in `prism/` (extracted from the official 4.10.1 Windows installer with
