@@ -17,8 +17,5 @@
     "probabilistic model checking",
     "reproducible research",
     "CVE-2026-33634"
-  ],
-  "related_identifiers": [
-    { "identifier": "CVE-2026-33634", "relation": "references", "scheme": "cve" }
   ]
 }
