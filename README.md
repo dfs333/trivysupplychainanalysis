@@ -172,7 +172,26 @@ facts are drawn from the public dossier (Aqua, GHSA, CVE-2026-33634, Unit 42, Mi
 Wiz, ReversingLabs, Endor Labs, OpenSSF/OSV, and others). Modeling assumptions and their
 limits are stated explicitly in the paper's *Limitations and Threats to Validity* section.
 
-To cite this work, see [`CITATION.cff`](CITATION.cff).
+---
+
+## Citation
+
+If you use this work, please cite the archived release (Zenodo DOI
+[10.5281/zenodo.21387135](https://doi.org/10.5281/zenodo.21387135)); machine-readable
+metadata is in [`CITATION.cff`](CITATION.cff).
+
+```bibtex
+@software{hanna_2026_trivy_teampcp,
+  author    = {Hanna, Franklin},
+  title     = {Formal Analysis of the Trivy / TeamPCP GitHub Actions
+               Supply-Chain Attack (CVE-2026-33634)},
+  year      = {2026},
+  version   = {v1.0.0},
+  publisher = {Zenodo},
+  doi       = {10.5281/zenodo.21387135},
+  url       = {https://doi.org/10.5281/zenodo.21387135}
+}
+```
 
 ---
 
