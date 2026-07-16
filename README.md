@@ -34,6 +34,10 @@ formally:
 - **How likely, how fast, how far.** Exact compromise probabilities, expected
   time-to-compromise, a two-stage npm-propagation cascade, and closed-form parametric
   results, calibrated against real malicious-package frequency data.
+- **The finding survives an automated search.** An LLM proposer (Claude Opus 4.8) searching
+  the defender-policy space against the verified PRISM oracle converges — with no human
+  guidance — on the same minimal-cost provably-safe policy: rotate the residual credential.
+  The proposer suggests; the model checker decides.
 
 ---
 
@@ -49,6 +53,7 @@ formally:
 | Parametric (closed form) | E[days-to-compromise] **= (p+1)/p**; P(stage 2) **= q** (exact) |
 | Layer-1 corpus (189 real workflows) | floating-tag fraction **f = 0.3698**; construct coverage **88.2%** |
 | Calibration (OpenSSF/OSV) | npm = 214,497 reports (94.2%); **Feb→Mar 2026: 329 → 1,048 (×3.19)** |
+| Automated mitigation search | LLM proposes, PRISM verifies → **rotate-only optimum** (score −0.05), converged in 4 rounds |
 
 ---
 
@@ -76,7 +81,8 @@ TrivySupplyChain/            The model + verification harness
   tools/tla2tools.jar        Bundled TLA+ / TLC 2.19
   layer1/                    Corpus analyzer (Python) + fixtures + tests
   layer3/                    PRISM models (.prism/.props) + bundled PRISM 4.10.1
-  asi_evolve/                Mitigation-search oracle over the verified model
+  asi_evolve/                LLM mitigation-search loop (run_evolve.py) over the verified
+                             PRISM oracle + an archived executed run (example_run.json)
   run-all.ps1                Reproduce all 10 TLC checks
   env-check.ps1              One-shot environment doctor
 Trivy-USENIX-paper/          USENIX-style LaTeX source (main.tex, compiles standalone)
