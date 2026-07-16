@@ -4,9 +4,9 @@ SPDX-License-Identifier: CC-BY-4.0
 Copyright (c) 2026 Franklin Hanna
 
 This directory contains the paper text and its build sources (main.tex and the
-compiled main.pdf). The paper text, figures, and its rendered copies (including
-the Word renditions under ../Docs/) are licensed under the Creative Commons
-Attribution 4.0 International License.
+compiled main.pdf), together with the filled-in validation-results Word document.
+The paper text, figures, and its rendered copies are licensed under the Creative
+Commons Attribution 4.0 International License.
 
 You are free to:
   * Share  -- copy and redistribute the material in any medium or format.

@@ -39,6 +39,6 @@ identifiers:
     description: The Trivy / TeamPCP supply-chain vulnerability analyzed.
 notes: >-
   The software and formal-methods artifacts are licensed under
-  Apache-2.0 (see LICENSE); the paper text under Trivy-USENIX-paper/
-  and its renditions under Docs/ are licensed CC-BY-4.0 (see
+  Apache-2.0 (see LICENSE); the paper text and its renditions under
+  Trivy-USENIX-paper/ are licensed CC-BY-4.0 (see
   Trivy-USENIX-paper/LICENSE).

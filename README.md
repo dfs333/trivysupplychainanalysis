@@ -85,9 +85,8 @@ TrivySupplyChain/            The model + verification harness
                              PRISM oracle + an archived executed run (example_run.json)
   run-all.ps1                Reproduce all 10 TLC checks
   env-check.ps1              One-shot environment doctor
-Trivy-USENIX-paper/          USENIX-style LaTeX source (main.tex, compiles standalone)
-Docs/                        Generated Word documents:
-  ValidationResults+Paper/   validation report + academic paper
+Trivy-USENIX-paper/          USENIX paper: main.tex (compiles standalone), main.pdf,
+                             and the filled-in validation-results .docx
 Trivy-TeamPCP-Dossier.md     Incident dossier — the sourced evidence base (read-only)
 ```
 
@@ -150,7 +149,8 @@ self-contained (standard CTAN packages) and compiles on Overleaf or with any TeX
 pdflatex main.tex && pdflatex main.tex     # or: tectonic main.tex
 ```
 
-Word renditions of the paper and the filled-in validation report are in `Docs/ValidationResults+Paper/`.
+The compiled paper is `main.pdf`; the filled-in validation report (Word) is
+`QA -- Validation Results (Filled In).docx` — both in `Trivy-USENIX-paper/`.
 
 ---
 
@@ -179,7 +179,7 @@ To cite this work, see [`CITATION.cff`](CITATION.cff).
 
 - **Code & formal-methods artifacts** (analyzers, TLA+/PRISM models, scripts, generators) —
   [Apache License 2.0](LICENSE).
-- **Paper text and its renditions** (`Trivy-USENIX-paper/`, `Docs/`) —
+- **Paper text and its renditions** (`Trivy-USENIX-paper/`) —
   [CC BY 4.0](Trivy-USENIX-paper/LICENSE).
 
 Bundled third-party tools keep their own licenses: PRISM is GPL
