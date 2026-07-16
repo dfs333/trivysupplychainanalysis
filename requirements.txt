@@ -1,16 +1,45 @@
-# Python dependencies for reproducing the analysis.
+# ============================================================================
+# Full requirements to reproduce the analysis.
 #
-# Layer 1 (corpus analyzer + unit tests) is the only layer with a third-party
-# Python dependency. Layers 2 (TLA+/TLC) and 3 (PRISM) run on bundled JARs and
-# native binaries and need no pip packages; the Word-doc generators use Node
-# (pinned via TrivySupplyChain/_docgen/package-lock.json).
+# This is a pip requirements file: `pip install -r requirements.txt` installs
+# the Python packages at the bottom. The rest of the toolchain can't be pip-
+# installed, so it is documented here as comments — the aim is that this one
+# file lists EVERYTHING needed, not only the Python dependencies.
+#
+# --- System / runtime tools (install these yourself) ---
+#   * OS / shell      : Windows + PowerShell for the run-*.ps1 drivers.
+#                       Layers 1-2 are cross-platform (Python + a bundled JAR);
+#                       Layer 3's bundled PRISM is Windows-native (see below).
+#   * JDK (Java 11+)  : set JAVA_HOME. Runs TLC (Layer 2) and PRISM (Layer 3).
+#                       Tested on JDK 20 (dev) and Temurin 21 (CI).
+#   * Python 3.10+    : Layer 1 analyzer + Layer 3 calibration (pip pkgs below).
+#   * Node.js (LTS)   : only to REGENERATE the Word docs (_docgen/*.js use the
+#                       `docx` npm package). Deps are pinned in
+#                       TrivySupplyChain/_docgen/package-lock.json — run
+#                       `npm ci` in that folder. Not needed to run the analysis.
+#   * Git for Windows : supplies the MinGW runtime DLLs (libwinpthread-1.dll,
+#                       etc.) that PRISM's native library (prism.dll / CUDD)
+#                       loads on Windows for Layer 3.
+#
+# --- Bundled in the repo (NO install needed) ---
+#   * TLA+ tools / TLC 2.19  ->  TrivySupplyChain/tools/tla2tools.jar
+#   * PRISM 4.10.1           ->  TrivySupplyChain/layer3/prism/
+#
+# --- Optional ---
+#   * LaTeX (tectonic, bundled in Trivy-USENIX-paper/_tec/, or any TeX engine):
+#     only to recompile the paper — main.pdf is already committed.
+#   * Anthropic API key + the `anthropic` SDK: only for the ASI-Evolve runner
+#     (TrivySupplyChain/asi_evolve/run_evolve.py). Pinned separately in
+#     TrivySupplyChain/asi_evolve/requirements.txt so the core reproduction
+#     stays dependency-light. Layers 1-3 need no key and no network.
+# ============================================================================
+
+# ---------------------------------------------------------------------------
+# Python packages (installed by `pip install -r requirements.txt`)
+# ---------------------------------------------------------------------------
 
 # Layer 1 -- required to run run-layer1.ps1 / corpus_analysis.py
 PyYAML>=6.0
 
 # Optional -- only for the docs TOC helper (_docgen/extract_toc_pages.py)
 pypdf>=4.0
-
-# The ASI-Evolve mitigation-search runner (TrivySupplyChain/asi_evolve/run_evolve.py)
-# needs the Anthropic SDK; it is pinned separately in asi_evolve/requirements.txt
-# so the core reproduction stays dependency-light.
