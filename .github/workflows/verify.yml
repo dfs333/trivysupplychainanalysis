@@ -11,9 +11,8 @@
 #
 # Layer 1 (Python) runs on Linux; Layer 2 (TLA+/TLC, bundled JAR) runs on
 # Windows via the project's PowerShell driver. Layer 3 (PRISM) also runs on
-# Windows but drives a native DLL + the Git-for-Windows MinGW runtime, so it is
-# included as a NON-BLOCKING job for now (continue-on-error) until it has proven
-# stable across runs; then it can be promoted to a required job.
+# Windows, driving a native DLL + the Git-for-Windows MinGW runtime -- verified
+# working on windows-latest, so it is a required gate alongside Layers 1 and 2.
 
 name: verify
 
@@ -59,13 +58,10 @@ jobs:
         run: ./run-all.ps1
 
   layer3-prism:
-    name: Layer 3 - PRISM quantitative model (non-blocking)
+    name: Layer 3 - PRISM quantitative model
     runs-on: windows-latest
-    # Non-blocking for now: Layer 3 drives PRISM's native prism.dll (CUDD), which
-    # needs the Git-for-Windows MinGW runtime DLLs. windows-latest ships Git for
-    # Windows, so this should work -- once it is green across a few runs, remove
-    # continue-on-error to make it a required gate.
-    continue-on-error: true
+    # Required gate: PRISM's native prism.dll (CUDD) runs on windows-latest using
+    # the Git-for-Windows MinGW runtime DLLs (verified green in CI).
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
