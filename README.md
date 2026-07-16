@@ -87,7 +87,6 @@ TrivySupplyChain/            The model + verification harness
   env-check.ps1              One-shot environment doctor
 Trivy-USENIX-paper/          USENIX-style LaTeX source (main.tex, compiles standalone)
 Docs/                        Generated Word documents:
-  Layout/                    draft + Layer-2 workflow docs
   ValidationResults+Paper/   validation report + academic paper
 Trivy-TeamPCP-Dossier.md     Incident dossier — the sourced evidence base (read-only)
 ```
@@ -131,6 +130,14 @@ each policy.
 
 The `.tla`, `.prism`, and `.py` sources are portable; only the runner scripts are Windows
 PowerShell. See `TrivySupplyChain/README.md` for the manual (cross-platform) commands.
+
+> **Layer 3 is Windows-only as bundled.** PRISM ships here as its native Windows library
+> (`prism.dll`, CUDD) plus the Git-for-Windows MinGW runtime, so `run-layer3.ps1` runs on
+> Windows only. A Linux/macOS reviewer can't run Layer 3 from the bundled binary — but the
+> `.prism`/`.props` models are portable: install upstream PRISM
+> (<https://www.prismmodelchecker.org>) and run them directly, e.g.
+> `prism layer3/trivy_mdp.prism layer3/trivy.props`. Layers 1–2 are cross-platform (Python,
+> and the bundled `tla2tools.jar` runs anywhere with a JDK).
 
 ---
 
