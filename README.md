@@ -143,6 +143,10 @@ PowerShell. See `TrivySupplyChain/README.md` for the manual (cross-platform) com
 
 ## The paper
 
+**📄 Read it in your browser:** [`main.pdf`](Trivy-USENIX-paper/main.pdf) — GitHub renders
+it inline. A direct download is attached to the
+[v1.0.0 release](https://github.com/dfs333/trivysupplychainanalysis/releases/tag/v1.0.0).
+
 `Trivy-USENIX-paper/main.tex` is the write-up in USENIX Security two-column format. It is
 self-contained (standard CTAN packages) and compiles on Overleaf or with any TeX engine:
 
