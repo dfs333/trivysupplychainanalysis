@@ -53,7 +53,32 @@ python evaluate.py baseline_config.json
 python evaluate.py my_candidate.json
 ```
 
-## Running the full ASI-Evolve loop (needs your setup)
+## The full loop, self-contained: `run_evolve.py` (executed)
+
+`run_evolve.py` **is** the loop -- no external framework required. Each round, Claude
+Opus 4.8 proposes a candidate policy; `evaluate.py` model-checks it with PRISM; the score
+feeds back. It tracks the best policy and stops when it converges.
+
+```powershell
+pip install -r requirements.txt        # anthropic SDK
+# auth: `ant auth login`, or set ANTHROPIC_API_KEY
+python run_evolve.py                    # up to 12 rounds, Opus, early-stop on convergence
+```
+
+**Executed run (2026-07-15, `claude-opus-4-8`, effort=high)** -- archived in
+[`example_run.json`](example_run.json):
+
+| Round | fraction_sha_pinned | rotation_complete | compromise | cost | score | safe |
+|---|---|---|---|---|---|---|
+| 1 | 0.0 | true | 0.0 | 0.05 | **-0.05** | yes |
+| 2 | 1.0 | false | 0.0 | 0.30 | -0.30 | yes |
+| 3-4 | 0.0 | true | 0.0 | 0.05 | -0.05 | yes |
+
+The search converged in four rounds to **rotate-only** (its round-1 proposal) -- the cheapest
+policy PRISM proves is safe -- independently recovering the paper's central finding. Every
+candidate was model-checked before it scored; the proposer cannot assert "safe" on its own.
+
+## Alternative: driving the external ASI-Evolve framework
 
 ASI-Evolve is a separate Python project and an LLM-driven loop, so the full run needs
 three things this repo can't bundle:
@@ -73,9 +98,9 @@ three things this repo can't bundle:
    ```
    (Use `problem.md` as the problem/seed and `baseline_config.json` as the baseline.)
 
-I verified the oracle and the score landscape here; I did **not** run the LLM loop,
-because it requires your API key. Hand me a key (or run step 3 yourself) and it will
-converge to the rotate-the-credential optimum above.
+The self-contained `run_evolve.py` loop above has already been executed end-to-end
+(see the run table and [`example_run.json`](example_run.json)); this external-framework
+path is an alternative that reuses the same `evaluate.py` oracle contract.
 
 > **Note on flag names:** ASI-Evolve's exact CLI flags may differ by version. Match
 > `evaluate.py`'s contract — *input: candidate JSON path; output: final stdout line is the

@@ -1,0 +1,67 @@
+{
+  "model": "claude-opus-4-8",
+  "effort": "high",
+  "rounds_run": 4,
+  "best": {
+    "round": 1,
+    "reasoning": "Rotation alone is claimed to drive compromise to zero at lowest cost (0.05), so test the cheap complete-rotation policy first with no SHA pinning.",
+    "metrics": {
+      "score": -0.05,
+      "compromise_fraction": 0.0,
+      "cost": 0.05,
+      "fraction_sha_pinned": 0.0,
+      "rotation_complete": true,
+      "safe": true
+    }
+  },
+  "history": [
+    {
+      "round": 1,
+      "reasoning": "Rotation alone is claimed to drive compromise to zero at lowest cost (0.05), so test the cheap complete-rotation policy first with no SHA pinning.",
+      "metrics": {
+        "score": -0.05,
+        "compromise_fraction": 0.0,
+        "cost": 0.05,
+        "fraction_sha_pinned": 0.0,
+        "rotation_complete": true,
+        "safe": true
+      }
+    },
+    {
+      "round": 2,
+      "reasoning": "Round 1 already found the cheapest safe policy (rotation-only, score -0.05); to complete the map I verify the independent SHA-only safe alternative, expecting it to be safe but more expensive (cost 0.30), confirming rotation dominates.",
+      "metrics": {
+        "score": -0.3,
+        "compromise_fraction": 0.0,
+        "cost": 0.3,
+        "fraction_sha_pinned": 1.0,
+        "rotation_complete": false,
+        "safe": true
+      }
+    },
+    {
+      "round": 3,
+      "reasoning": "Round 1 showed complete rotation alone (sha=0, rotate=true) achieves compromise_fraction=0 at the lowest cost 0.05; since rotation is a cheap one-off and SHA-pinning only adds cost, this is the cheapest safe policy and there is no cheaper safe alternative to explore.",
+      "metrics": {
+        "score": -0.05,
+        "compromise_fraction": 0.0,
+        "cost": 0.05,
+        "fraction_sha_pinned": 0.0,
+        "rotation_complete": true,
+        "safe": true
+      }
+    },
+    {
+      "round": 4,
+      "reasoning": "Rounds 1 and 3 already show that complete rotation alone (no SHA pinning) is SAFE at the lowest possible cost of 0.05; any pinning only adds cost, and dropping rotation leaves residual risk. Re-confirm the cheapest safe policy.",
+      "metrics": {
+        "score": -0.05,
+        "compromise_fraction": 0.0,
+        "cost": 0.05,
+        "fraction_sha_pinned": 0.0,
+        "rotation_complete": true,
+        "safe": true
+      }
+    }
+  ]
+}
