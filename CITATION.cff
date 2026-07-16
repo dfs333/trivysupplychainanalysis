@@ -1,0 +1,44 @@
+cff-version: 1.2.0
+title: >-
+  Formal Analysis of the Trivy / TeamPCP GitHub Actions
+  Supply-Chain Attack (CVE-2026-33634)
+message: >-
+  If you use this repository -- the formal models, the corpus
+  analysis, or the paper -- please cite it using these metadata.
+type: software
+authors:
+  - given-names: Franklin
+    family-names: Hanna
+abstract: >-
+  A three-layer formal analysis of the March-2026 Trivy / TeamPCP
+  GitHub Actions supply-chain attack. Layer 1 statically analyzes a
+  189-workflow corpus to ground the model's assumptions; Layer 2
+  reconstructs the incident in TLA+ and uses TLC to prove which
+  mitigations close it (per-pipeline isolation and a refinement
+  relation with quantified residual surface); Layer 3 lifts the same
+  model into a PRISM Markov model for probabilities, expected time,
+  a two-stage npm cascade, and closed-form parametric results,
+  calibrated against the OpenSSF/OSV malicious-packages dataset. An
+  ASI-Evolve mitigation-search harness rides on the verified oracle.
+version: 1.0.0
+date-released: '2026-07-15'
+license: Apache-2.0
+repository-code: 'https://github.com/dfs333/trivysupplychainanalysis'
+keywords:
+  - supply-chain security
+  - GitHub Actions
+  - formal methods
+  - model checking
+  - TLA+
+  - PRISM
+  - probabilistic model checking
+  - CVE-2026-33634
+identifiers:
+  - type: other
+    value: CVE-2026-33634
+    description: The Trivy / TeamPCP supply-chain vulnerability analyzed.
+notes: >-
+  The software and formal-methods artifacts are licensed under
+  Apache-2.0 (see LICENSE); the paper text under Trivy-USENIX-paper/
+  and its renditions under Docs/ are licensed CC-BY-4.0 (see
+  Trivy-USENIX-paper/LICENSE).

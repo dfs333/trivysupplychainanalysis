@@ -1,0 +1,5 @@
+# Dependency for the ASI-Evolve mitigation-search runner (run_evolve.py).
+# Only the LLM *proposer* needs this; the PRISM oracle (evaluate.py) runs with
+# no third-party Python packages. Authenticate with `ant auth login` or by
+# setting ANTHROPIC_API_KEY.
+anthropic>=0.40

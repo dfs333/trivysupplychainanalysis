@@ -4,7 +4,11 @@ __pycache__/
 states/
 .claude/
 .vs/
+.gradle/
 Trivy-USENIX-paper/_tec/
+
+# non-deterministic ASI-Evolve run output (needs an API key; regenerated per run)
+TrivySupplyChain/layer3/results/asi_evolve_run.json
 
 # local-only working files (kept on disk, not published)
 HANDOFF.md

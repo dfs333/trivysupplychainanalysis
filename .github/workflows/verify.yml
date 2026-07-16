@@ -1,0 +1,58 @@
+# Reproduce the formal analysis on every push / PR.
+#
+# Practicing what the paper preaches:
+#   * permissions are least-privilege (read-only GITHUB_TOKEN), the Layer 1
+#     finding's recommendation for CI workflows;
+#   * these first-party actions are referenced by major-version tag for
+#     readability. This project's central finding is that GitHub Actions should
+#     be pinned to full commit SHAs, not floating tags -- in a production
+#     pipeline following the paper, replace each `@vN` below with a full 40-char
+#     commit SHA (e.g. `actions/checkout@<sha>  # v4`).
+#
+# Layer 1 (Python) runs on Linux; Layer 2 (TLA+/TLC, bundled JAR) runs on
+# Windows via the project's PowerShell driver. Layer 3 (PRISM) depends on a
+# native Windows DLL plus the Git-for-Windows MinGW runtime and is run locally
+# (see layer3/run-layer3.ps1), not in CI.
+
+name: verify
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  layer1-corpus:
+    name: Layer 1 - corpus analyzer (Python)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Unit tests (extractor correctness on synthetic fixtures)
+        working-directory: TrivySupplyChain/layer1
+        run: python test_corpus_analysis.py
+      - name: Analyze the committed 189-workflow corpus
+        working-directory: TrivySupplyChain/layer1
+        run: python corpus_analysis.py corpus --json results/corpus_report.json --md results/corpus_report.md
+
+  layer2-tlc:
+    name: Layer 2 - TLA+/TLC incident reconstruction
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Run the 10-configuration TLC validation suite
+        shell: pwsh
+        working-directory: TrivySupplyChain
+        run: ./run-all.ps1

@@ -1,0 +1,16 @@
+# Python dependencies for reproducing the analysis.
+#
+# Layer 1 (corpus analyzer + unit tests) is the only layer with a third-party
+# Python dependency. Layers 2 (TLA+/TLC) and 3 (PRISM) run on bundled JARs and
+# native binaries and need no pip packages; the Word-doc generators use Node
+# (pinned via TrivySupplyChain/_docgen/package-lock.json).
+
+# Layer 1 -- required to run run-layer1.ps1 / corpus_analysis.py
+PyYAML>=6.0
+
+# Optional -- only for the docs TOC helper (_docgen/extract_toc_pages.py)
+pypdf>=4.0
+
+# The ASI-Evolve mitigation-search runner (TrivySupplyChain/asi_evolve/run_evolve.py)
+# needs the Anthropic SDK; it is pinned separately in asi_evolve/requirements.txt
+# so the core reproduction stays dependency-light.

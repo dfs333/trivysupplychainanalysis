@@ -8,6 +8,7 @@ exhaustively with TLC, and quantified with the PRISM probabilistic model checker
 ![PRISM](https://img.shields.io/badge/PRISM-MDP%20%2B%20DTMC%20%2B%20parametric-blue)
 ![corpus](https://img.shields.io/badge/corpus-189%20real%20workflows-informational)
 ![CVE](https://img.shields.io/badge/incident-CVE--2026--33634-critical)
+[![verify](https://github.com/dfs333/trivysupplychainanalysis/actions/workflows/verify.yml/badge.svg)](https://github.com/dfs333/trivysupplychainanalysis/actions/workflows/verify.yml)
 
 > **Every number in the paper regenerates from this repository.** The model, the
 > probabilities, the corpus measurements, and the calibration all reproduce from source
@@ -111,7 +112,16 @@ powershell -File TrivySupplyChain\layer1\run-layer1.ps1
 
 # 3. Layer 3 — PRISM: probabilities, multi-stage cascade, parametric, calibration
 powershell -File TrivySupplyChain\layer3\run-layer3.ps1
+
+# 4. (optional) ASI-Evolve mitigation search — Claude Opus proposes policies,
+#    PRISM verifies each one. Needs the Anthropic SDK + an API key.
+pip install -r TrivySupplyChain\asi_evolve\requirements.txt
+python TrivySupplyChain\asi_evolve\run_evolve.py
 ```
+
+Layers 1–3 are self-contained and need no API key. Only step 4's *proposer* is an LLM;
+its PRISM oracle (`asi_evolve/evaluate.py`) runs standalone and is what actually scores
+each policy.
 
 The `.tla`, `.prism`, and `.py` sources are portable; only the runner scripts are Windows
 PowerShell. See `TrivySupplyChain/README.md` for the manual (cross-platform) commands.
@@ -147,3 +157,17 @@ placeholders in `main.tex`). Incident
 facts are drawn from the public dossier (Aqua, GHSA, CVE-2026-33634, Unit 42, Microsoft,
 Wiz, ReversingLabs, Endor Labs, OpenSSF/OSV, and others). Modeling assumptions and their
 limits are stated explicitly in the paper's *Limitations and Threats to Validity* section.
+
+To cite this work, see [`CITATION.cff`](CITATION.cff).
+
+---
+
+## License
+
+- **Code & formal-methods artifacts** (analyzers, TLA+/PRISM models, scripts, generators) —
+  [Apache License 2.0](LICENSE).
+- **Paper text and its renditions** (`Trivy-USENIX-paper/`, `Docs/`) —
+  [CC BY 4.0](Trivy-USENIX-paper/LICENSE).
+
+Bundled third-party tools keep their own licenses: PRISM is GPL
+(`TrivySupplyChain/layer3/prism/COPYING.txt`) and the TLA+ tools are MIT.
